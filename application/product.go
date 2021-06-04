@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/asaskevich/govalidator"
+	uuid "github.com/satori/go.uuid"
 )
 
 /*
@@ -24,6 +25,37 @@ type ProductInterface interface {
 	GetPrice() float64
 }
 
+/*
+	Technical details such as DB persistence are not defined here
+	The Service Interface is decoupled from specific implementations
+	This is a crucial point on Hexagonal Architecture
+*/
+type ProductServiceInterface interface {
+	Get(id string) (ProductInterface, error)
+	Create(name string, price float64) (ProductInterface, error)
+	Enable(product ProductInterface) (ProductInterface, error)
+	Disable(product ProductInterface) (ProductInterface, error)
+}
+
+// Interface for Reading DB
+type ProductReader interface {
+	Get(id string) (ProductInterface, error)
+}
+
+// Interface for Saving on DB
+type ProductWriter interface {
+	Save(product ProductInterface) (ProductInterface, error)
+}
+
+/*
+	Defining a single interface for DB operations with interface composition
+	Any DB that is implemented will never communicate with the Service directly
+*/
+type ProductPersistenceInterface interface {
+	ProductReader
+	ProductWriter
+}
+
 const (
 	DISABLED = "disabled"
 	ENABLED  = "enabled"
@@ -34,6 +66,15 @@ type Product struct {
 	Name   string  `valid:"required"`
 	Price  float64 `valid:"float,optional"` // Optional because when zero, it returns empty value (bug?)
 	Status string  `valid:"required"`
+}
+
+// Constructor, to set default values
+func NewProduct() *Product {
+	product := Product{
+		ID:     uuid.NewV4().String(),
+		Status: DISABLED,
+	}
+	return &product
 }
 
 func (p *Product) IsValid() (bool, error) {
