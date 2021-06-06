@@ -16,8 +16,12 @@ limitations under the License.
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
+
+	dbInfra "github.com/dnbtr/fullcycle.hexagonal/adapters/db"
+	"github.com/dnbtr/fullcycle.hexagonal/application"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -25,6 +29,13 @@ import (
 )
 
 var cfgFile string
+
+/*
+	Setting up the adapters
+*/
+var db, _ = sql.Open("sqlite3", "db.sqlite")
+var productDatabase = dbInfra.NewProductDb(db)
+var productService = application.ProductService{Persistence: productDatabase}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
