@@ -92,10 +92,8 @@ func (p *Product) IsValid() (bool, error) {
 
 	// Using govalidator
 	_, err := govalidator.ValidateStruct(p)
+	if err != nil {	return false, err	}
 
-	if err != nil {
-		return false, err
-	}
 	return true, nil
 }
 
